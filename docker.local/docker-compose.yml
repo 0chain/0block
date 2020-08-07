@@ -1,0 +1,26 @@
+version: "3"
+services:
+  0block:
+    environment:
+      - DOCKER=true
+    build:
+      context: ../
+      dockerfile: ./docker.local/Dockerfile
+    volumes:
+      - ./config:/0block/config
+    ports:
+      - "9092:9092"
+    networks:
+      default:
+      testnet0:
+        ipv4_address: 198.18.0.92
+    command: ./bin/zblock --deployment_mode 0 --keys_file /0block/config/0block_keys.txt
+
+networks:
+  default:
+    driver: bridge
+  testnet0:
+    external: true
+
+volumes:
+  config:

@@ -1,0 +1,22 @@
+version: 1.0
+
+logging:
+  level: "info"
+  console: false # printing log to console is only supported in development mode
+
+server_chain:
+  id: "0afc093ffb509f059c55478bc1a60351cef7b4e9c008a53a6cc8241ca8617dfe"
+  signature_scheme: "bls0chain"
+
+port: 9092
+
+mongo:
+  url: mongodb://mongodb:27017
+  db_name: block-recorder
+  pool_size: 2
+
+dns_url: http://198.18.0.98:9091
+
+worker:
+  round_fetch_delay: 250 # in milliseconds
+  round_fetch_retires: 15 # Retries to fetch a round (if failed)
