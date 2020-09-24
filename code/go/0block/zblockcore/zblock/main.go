@@ -40,9 +40,9 @@ func initializeConfig() {
 }
 
 func initHandlers(r *mux.Router) {
-	r.HandleFunc("/", HomePageHandler)
-	r.HandleFunc("/logs", logging.LogWriter)
-	r.HandleFunc("/mem_logs", logging.MemLogWriter)
+	r.HandleFunc("/", common.UserRateLimit(HomePageHandler))
+	r.HandleFunc("/logs", common.UserRateLimit(logging.LogWriter))
+	r.HandleFunc("/mem_logs", common.UserRateLimit(logging.MemLogWriter))
 }
 
 var startTime time.Time
