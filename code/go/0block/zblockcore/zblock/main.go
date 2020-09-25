@@ -103,6 +103,7 @@ func main() {
 	}
 	common.HandleShutdown(server)
 
+	common.ConfigRateLimits()
 	initHandlers(r)
 	go worker.SetupWorkers(context.Background())
 
