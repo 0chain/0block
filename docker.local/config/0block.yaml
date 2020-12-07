@@ -22,4 +22,4 @@ dns_url: http://198.18.0.98:9091
 
 worker:
   round_fetch_delay: 250 # in milliseconds
-  round_fetch_retires: 15 # Retries to fetch a round (if failed)
+  round_fetch_retires: 100 # Retries to fetch a round (if failed)

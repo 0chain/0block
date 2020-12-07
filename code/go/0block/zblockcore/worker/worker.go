@@ -39,17 +39,27 @@ func fetchBlock(ctx context.Context, blockChan chan *block.Block, round int64, m
 		case <-ctx.Done():
 			return
 		default:
+			missedBlocks := 0
 			retries := config.Configuration.RoundFetchRetries
 			Logger.Info("Fetching block by round from blockchain", zap.Any("round", round))
 			for retries > 0 {
 				block, err := zcncore.GetBlockByRound(ctx, zcncore.GetMinShardersVerify(), round)
 				if err != nil {
 					retries--
-					Logger.Error("Unable to get block by round from blockchain", zap.Error(err), zap.Any("round", round), zap.Any("Attempts left", retries))
+					Logger.Info("Unable to get block by round from blockchain", zap.Error(err), zap.Any("round", round), zap.Any("Attempts left", retries))
 					time.Sleep(time.Duration(config.Configuration.RoundFetchDelayInMilliSeconds) * time.Millisecond)
+					missedBlocks++
+					if missedBlocks > 100 && mode == forward {
+						panic("Too many missed blocks, Network probably stuck, Killing block worker...")
+					}
 					continue
-
 				}
+
+				if missedBlocks > 0 && mode == forward {
+					go Scanner(ctx, round-1)
+					missedBlocks = 0
+				}
+
 				Logger.Info("Got block by round from blockchain", zap.Any("round", round))
 				blockChan <- block
 				break
