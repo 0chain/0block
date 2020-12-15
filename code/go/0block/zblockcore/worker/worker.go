@@ -42,6 +42,7 @@ func fetchBlock(ctx context.Context, blockChan chan *block.Block, round int64, m
 			retries := config.Configuration.RoundFetchRetries
 			Logger.Info("Fetching block by round from blockchain", zap.Any("round", round))
 			for retries > 0 {
+				t := time.Now()
 				block, err := zcncore.GetBlockByRound(ctx, zcncore.GetMinShardersVerify(), round)
 				if err != nil {
 					retries--
@@ -51,7 +52,7 @@ func fetchBlock(ctx context.Context, blockChan chan *block.Block, round int64, m
 					continue
 				}
 
-				Logger.Info("Got block by round from blockchain", zap.Any("round", round), zap.Any("mode", mode))
+				Logger.Info("Got block by round from blockchain", zap.Any("round", round), zap.Any("mode", mode), zap.Any("time taken", time.Since(t)))
 				blockChan <- block
 				break
 			}
