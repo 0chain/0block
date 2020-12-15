@@ -39,28 +39,21 @@ func fetchBlock(ctx context.Context, blockChan chan *block.Block, round int64, m
 		case <-ctx.Done():
 			return
 		default:
-			if models.CheckBlockPresentInDB(ctx, round) {
-				Logger.Info("Block already present in DB", zap.Any("round", round), zap.Any("mode", mode))
-			} else {
-				retries := config.Configuration.RoundFetchRetries
-				Logger.Info("Fetching block by round from blockchain", zap.Any("round", round))
-				for retries > 0 {
-					block, err := zcncore.GetBlockByRound(ctx, zcncore.GetMinShardersVerify(), round)
-					if err != nil {
-						retries--
-						Logger.Info("Unable to get block by round from blockchain", zap.Error(err), zap.Any("round", round),
-							zap.Any("Attempts left", retries), zap.Any("mode", mode))
-						time.Sleep(time.Duration(config.Configuration.RoundFetchDelayInMilliSeconds) * time.Millisecond)
-						if retries == 0 && mode == forward {
-							panic("A block is missed, Network probably stuck, Killing block worker...")
-						}
-						continue
-					}
-
-					Logger.Info("Got block by round from blockchain", zap.Any("round", round), zap.Any("mode", mode))
-					blockChan <- block
-					break
+			retries := config.Configuration.RoundFetchRetries
+			Logger.Info("Fetching block by round from blockchain", zap.Any("round", round))
+			for retries > 0 {
+				block, err := zcncore.GetBlockByRound(ctx, zcncore.GetMinShardersVerify(), round)
+				if err != nil {
+					retries--
+					Logger.Info("Unable to get block by round from blockchain", zap.Error(err), zap.Any("round", round),
+						zap.Any("Attempts left", retries), zap.Any("mode", mode))
+					time.Sleep(time.Duration(config.Configuration.RoundFetchDelayInMilliSeconds) * time.Millisecond)
+					continue
 				}
+
+				Logger.Info("Got block by round from blockchain", zap.Any("round", round), zap.Any("mode", mode))
+				blockChan <- block
+				break
 			}
 
 			if mode == forward {
@@ -73,6 +66,10 @@ func fetchBlock(ctx context.Context, blockChan chan *block.Block, round int64, m
 }
 
 func insertBlock(ctx context.Context, blockToProcess *block.Block) {
+	if exists := models.CheckBlockPresentInDB(ctx, blockToProcess.Round); exists {
+		Logger.Info("Block already present in DB", zap.Any("round", blockToProcess.Round))
+		return
+	}
 	go func(ctx context.Context, b *block.Block) {
 		retries := config.Configuration.RoundFetchRetries
 		for retries > 0 {
