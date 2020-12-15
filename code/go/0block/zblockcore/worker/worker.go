@@ -42,7 +42,6 @@ func fetchBlock(ctx context.Context, blockChan chan *block.Block, round int64, m
 			if models.CheckBlockPresentInDB(ctx, round) {
 				Logger.Info("Block already present in DB", zap.Any("round", round), zap.Any("mode", mode))
 			} else {
-				missedBlocks := 0
 				retries := config.Configuration.RoundFetchRetries
 				Logger.Info("Fetching block by round from blockchain", zap.Any("round", round))
 				for retries > 0 {
@@ -50,18 +49,12 @@ func fetchBlock(ctx context.Context, blockChan chan *block.Block, round int64, m
 					if err != nil {
 						retries--
 						Logger.Info("Unable to get block by round from blockchain", zap.Error(err), zap.Any("round", round),
-							zap.Any("Attempts left", retries), zap.Any("mode", mode), zap.Any("missed blocks", missedBlocks))
+							zap.Any("Attempts left", retries), zap.Any("mode", mode))
 						time.Sleep(time.Duration(config.Configuration.RoundFetchDelayInMilliSeconds) * time.Millisecond)
-						missedBlocks++
-						if missedBlocks > 100 && mode == forward {
-							panic("Too many missed blocks, Network probably stuck, Killing block worker...")
+						if retries == 0 && mode == forward {
+							panic("A block is missed, Network probably stuck, Killing block worker...")
 						}
 						continue
-					}
-
-					if missedBlocks > 0 && mode == forward {
-						go Scanner(ctx, round-1)
-						missedBlocks = 0
 					}
 
 					Logger.Info("Got block by round from blockchain", zap.Any("round", round), zap.Any("mode", mode))
