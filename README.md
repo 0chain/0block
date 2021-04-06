@@ -27,6 +27,11 @@ If there is new code, do a git pull and run the following command
 ```
 $ ./docker.local/bin/build.sh
 ```
+You may need to run the following command occasionaly to make sure your device is in sync with ntp
+
+```
+$ ./docker.local/bin/sync_clock.sh
+```
 
 Go to the bin directory (cd docker.local/bin) and run the container using
 
