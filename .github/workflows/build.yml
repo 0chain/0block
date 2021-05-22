@@ -5,7 +5,7 @@ on:
      branches: [ gitactionsfix ]
 
 env:
-  BOX_REGISTRY: 0blockreg/0block
+  BLOCK_REGISTRY: 0blockreg/0block
 
 jobs:
    dockerize_box:
@@ -25,8 +25,8 @@ jobs:
 
        - name: Build zblock
          run: |
-            docker build -t $BOX_REGISTRY:$TAG -f "$DOCKERFILE_BOX" .
-           # docker push $BOX_REGISTRY:$TAG
+            docker build -t $BLOCK_REGISTRY:$TAG -f "$DOCKERFILE_BLOCK" .
+           # docker push $BLOCK_REGISTRY:$TAG
          env:
            TAG: ${{ steps.get_version.outputs.VERSION }}
-           DOCKERFILE_BOX: "docker.local/Dockerfile"
+           DOCKERFILE_BLOCK: "docker.local/Dockerfile"
