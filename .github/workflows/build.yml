@@ -9,10 +9,10 @@ on:
         required: true
 
 env:
-  BLOCK_REGISTRY: 0blockreg/0block
+  BLOCK_REGISTRY: ${{ secrets.BLOCK_REGISTRY }}
 
 jobs:
-   dockerize_box:
+   dockerize_block:
        runs-on: ubuntu-20.04
        steps:
        - uses: actions/checkout@v2
@@ -25,27 +25,28 @@ jobs:
             echo ::set-output name=BRANCH::${BRANCH}
             echo ::set-output name=VERSION::${BRANCH}-${SHORT_SHA}     
 
-#        - name: Login to Docker Hub
-#          uses: docker/login-action@v1
-#          with:
-#            username: ${{ secrets.DOCKERHUB_USERNAME }}
-#            password: ${{ secrets.DOCKERHUB_PASSWORD }}
+       - name: Login to Docker Hub
+         uses: docker/login-action@v1
+         with:
+           username: ${{ secrets.DOCKERHUB_USERNAME }}
+           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
        - name: Build zblock
          run: |
             docker build -t $BLOCK_REGISTRY:$TAG -f "$DOCKERFILE_BLOCK" .
             docker tag $BLOCK_REGISTRY:$TAG $BLOCK_REGISTRY:latest
+            docker push $BLOCK_REGISTRY:$TAG
          env:
            TAG: ${{ steps.get_version.outputs.VERSION }}
            DOCKERFILE_BLOCK: "docker.local/Dockerfile"
 
-#        - name: Push image
-#          run: |
-#            if [[ "$PUSH_LATEST" == "yes" ]]; then
-#              docker push $BLOCK_REGISTRY:latest
-#            else
-#              docker push $BLOCK_REGISTRY:$TAG
-#            fi
-#          env:
-#            PUSH_LATEST: ${{ github.event.inputs.latest_tag }}
-#            TAG: ${{ steps.get_version.outputs.VERSION }}
+       - name: Push image
+         run: |
+           if [[ "$PUSH_LATEST" == "yes" ]]; then
+             docker push $BLOCK_REGISTRY:latest
+           else
+             docker push $BLOCK_REGISTRY:$TAG
+           fi
+         env:
+           PUSH_LATEST: ${{ github.event.inputs.latest_tag }}
+           TAG: ${{ steps.get_version.outputs.VERSION }}
